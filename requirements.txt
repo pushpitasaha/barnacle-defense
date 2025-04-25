@@ -1,0 +1,6 @@
+numpy
+matplotlib
+flask
+pytest
+numba
+joblib
