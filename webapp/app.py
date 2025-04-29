@@ -7,7 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from flask import Flask, render_template, request
-from simulations import sim1_mendelian, sim2_es_bitflip, sim3_es_gaussian, sim3_es_gaussian_optimized
+from simulations import sim1_mendelian, sim2_es_bitflip, sim3_es_gaussian, sim3_es_gaussian_optimized, sim4_within_patch, sim5_nearest_neighbor
 import matplotlib.pyplot as plt
 import numpy as np
 import io
@@ -19,7 +19,9 @@ SIMULATIONS = {
     "sim1": sim1_mendelian.run,
     "sim2": sim2_es_bitflip.run,
     "sim3": sim3_es_gaussian.run,
-    "sim3_optimized": sim3_es_gaussian_optimized.run
+    "sim3_optimized": sim3_es_gaussian_optimized.run,
+    "sim4": sim4_within_patch.run,
+    "sim5": sim5_nearest_neighbor.run
 }
 
 # create plot as base64 string to embed in HTML
