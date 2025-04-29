@@ -24,5 +24,10 @@
         <h2>Result:</h2>
         <p>{{ result }}</p>
     {% endif %}
+
+    {% if plot_url %}
+        <h3>Simulation Output:</h3>
+        <img src="data:image/png;base64,{{ plot_url }}" alt="Simulation Plot">
+    {% endif %}
 </body>
 </html>
