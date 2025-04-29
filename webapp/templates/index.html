@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Barnacle Simulation</title>
+</head>
+<body>
+    <h1>Barnacle Defense Simulation UI</h1>
+    <form method="POST">
+        <label>Select model:</label><br>
+        <select name="model">
+            <option value="sim1">Mendelian</option>
+            <option value="sim2">(μ,λ)-ES Bit-Flip</option>
+            <option value="sim3">Gaussian</option>
+            <option value="sim3_optimized">Gaussian (Optimized)</option>
+        </select><br><br>
+
+        <label>Generations:</label><br>
+        <input type="number" name="generations" value="100"><br><br>
+
+        <input type="submit" value="Run Simulation">
+    </form>
+
+    {% if result %}
+        <h2>Result:</h2>
+        <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
