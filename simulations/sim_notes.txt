@@ -1,0 +1,170 @@
+These simulations are based on a biology paper (Townsend et al., SAC 2012) 
+about how barnacles evolve physical defenses (like bent shells) when they detect signs of predators.
+The models track how barnacle genomes evolve across generations in different environments.
+
+In all simulations, we use code to mimic this evolution — showing how populations adapt based on:
+* Where they live (benign or harsh patches)
+* Whether they detect a cue (a predator signal)
+* How their genes determine their shell type (bent or conic)
+
+Each simulation is a different version of the same idea:
+“How do barnacles evolve if we change how they mate, mutate, or are selected?”
+
+--------------------------
+Bio-concepts
+--------------------------
+
+Genome:
+Each barnacle has a string of 20 binary values (0s and 1s). These represent its genetic makeup. More 1s = more likely to defend.
+
+Morph types:
+* Bent morph = defense trait (curved shell to avoid predators)
+* Conic morph = normal barnacle shape
+
+t0, t1 (Thresholds):
+Used to decide if a barnacle will be bent or conic:
+
+* If genome sum ≥ t0 and sees predator cue → bent
+* If genome sum ≤ t1 and doesn’t see cue → conic
+* Between t0 and t1 = conditional morph
+
+Environmental Cue:
+Some patches are more likely to expose barnacles to predator signals. Each patch has a cue probability.
+
+Patch Types:
+There are four patch types — based on whether the area is benign/harsh and the chance of getting a cue:
+
+Benign with cue   = F × p
+Benign no cue     = (1 - F) × p
+Harsh with cue    = G × (1 - p)
+Harsh no cue      = (1 - G) × (1 - p)
+
+Variables:
+p = chance a barnacle is in a benign patch (defaults to 0.5)
+F = cue probability in benign patch (defaults to 0.5)
+G = cue probability in harsh patch (defaults to 0.5)
+t0 = lower threshold = 6 (guaranteed conic below this)
+t1 = upper threshold = 14 (guaranteed bent above this)
+mutation\_rate = small chance (usually 1e-4) of gene changing during reproduction
+
+-------------------------------
+Output for All Simulations
+-------------------------------
+
+Each simulation returns:
+* A percent value per generation showing how many barnacles developed bent morphs
+* This value is passed to a function track\_callback(value) for visualization
+
+All simulations follow this pattern:
+def run(generations=10000, track\_callback=None):
+
+------------------------------
+Shared Code
+------------------------------
+Barnacle: object with a genome and logic to determine morph
+Patch: environment container with cue logic and selection
+Used in all sims except sim5, which uses its own grid
+
+------------------------------
+Sim-by-sim ideas (how it works, what it shows, key features/why it's used)
+------------------------------
+
+1. sim1\_mendelian.py – Baseline simulation based on paper
+
+how it works:
+* Each barnacle gets 20 genes (10 gene pairs from two parents)
+* Gene pairs are inherited one pair at a time
+* Mutation: gene randomly increased or decreased by 1 with a very small chance
+* Parents picked randomly from entire population
+
+what it shows:
+* A recreation of the model described in the paper
+* Very slow but highly realistic genetic evolution
+
+key features:
+* Full population size: 5000 barnacles
+* Patch cue probabilities follow paper exactly
+* No spatial or patch-specific mating
+
+2. sim2\_es\_bitflip.py – (μ,λ)-Evolution Strategy with bitflip
+
+how it works:
+* Start with μ = 100 parents
+* Generate λ = 500 offspring each generation
+* Genes are chosen one by one from either parent (discrete recombination)
+* Each gene can be flipped (0 to 1 or 1 to 0) with tiny chance (bitflip mutation)
+
+what it shows:
+* How evolution works if mating and mutation are less biologically realistic but faster
+* Population is not tied to patches
+
+why it's used:
+* Easier to tune and run than Mendelian
+* Introduces classic evolutionary algorithm structure
+
+3. sim3\_es\_gaussian.py – Self-adaptive Evolution Strategy
+
+how it works:
+* Same parent/offspring structure as sim2
+* Each barnacle also has a sigma array (mutation strength for each gene)
+* Genes are mutated using Gaussian noise (bell curve randomness)
+* Sigmas are evolved too: they are averaged and mutated during reproduction
+
+what it shows:
+* Continuous, smooth adaptation of mutation rates and genomes
+* More realistic model of adaptive evolution than fixed bitflipping
+
+key feature:
+* Genome values are floats during mutation, rounded to 0 or 1 after
+
+4. sim3\_es\_gaussian\_optimized.py – Numba-accelerated version of sim3
+
+how it works (changes made):
+* Used Numba (@njit) to make recombination and mutation run much faster
+* Avoided np.random.choice() on object arrays (used Python’s random.sample)
+* Only worked because genome size and structure are consistent
+
+why it's used:
+* Makes model 5 to 10 times faster
+* Necessary for deployment or high-generation simulations
+
+5. sim4\_within\_patch.py – Patch-local mating only
+
+how it works:
+* Each patch manages its own barnacle group
+* Mating happens only within the patch
+* Mutation: bitflip like sim2
+
+what it shows:
+* How isolation affects evolution
+* Whether localized adaptation changes global outcomes
+
+why it works:
+* Moves toward real ecological structure
+* Useful for modeling partially isolated subpopulations
+
+6. sim5\_nearest\_neighbor.py – Mating on a 2D grid
+
+how it works:
+* 30 by 30 grid (900 barnacles)
+* Each barnacle can only mate with 8 neighbors
+* Genes recombined and mutated via bitflip
+* New generation replaces grid each cycle
+
+key features:
+* Cues are re-randomized every generation
+* Strongest spatial constraints of all models
+
+what it shows:
+* Local evolution under movement and geographic limits
+* Genetic drift and edge effects
+
+
+List of Methods - summary
+
+Sim  Recombination       Mutation Type    Mating Scope         Notes
+1    Mendelian (pair)    ±1 mutation      Global               Matches biology paper
+2    Discrete allele     Bitflip          Global               Faster, less realistic
+3    Averaged + sigma    Gaussian noise   Global               Self-adaptive strategy
+4    Discrete allele     Bitflip          Within patch         Local adaptation
+5    Discrete allele     Bitflip          Grid neighbors only  Strongest spatial constraint
